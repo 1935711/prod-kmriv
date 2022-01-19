@@ -14,11 +14,13 @@ all: main
 
 main: $(DIR_BUILD) $(DIR_BUILD)/$(MAIN_NAME).img
 $(DIR_BUILD)/$(MAIN_NAME).img: $(MAIN_SRC)
-	$(ASM) $(MAIN_ASM_FLAGS) $(MAIN_SRC) $@
+	$(ASM) $(MAIN_SRC) $(@) -s $(@).symb $(MAIN_ASM_FLAGS)
 
 $(DIR_BUILD):
 	$(call pal_mkdir,$(@))
 clean:
 	$(call pal_rmdir,$(DIR_BUILD))
 run: main
-	@qemu-system-x86_64 -s -drive file=$(DIR_BUILD)/$(MAIN_NAME).img,index=0,media=disk,format=raw
+	@qemu-system-x86_64 -drive file=$(DIR_BUILD)/$(MAIN_NAME).img,index=0,media=disk,format=raw -soundhw pcspk
+rundbg: main
+	@qemu-system-x86_64 -S -s -drive file=$(DIR_BUILD)/$(MAIN_NAME).img,index=0,media=disk,format=raw -soundhw pcspk

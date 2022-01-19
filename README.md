@@ -13,7 +13,7 @@ The state of every agent is simply:
 The simulation itself proceeds like this:
 1. **Sense** = Measure the concentration of trails ahead to find the angle relative to the heading in which there is a highest trail concentration.
 2. **Rotate** = Change of heading angle based on the sensed value.
-3. **Move** = Agent moves in the heading direction but will avoid collisions through smallest possible change in heading angle (if a collision can be avoided to the left and right with equal length, the direction chosen is random).
+3. **Move** = Agent moves in the heading direction (collisions will be accepted here even though the original paper did not allow them).
 4. **Deposit** = At the new position of the agent, a fresh trail is left in the trail map.
 5. **Diffuse** = A mean filter is applied on the trail map to simulate the trails spreading out.
 6. **Decay** = The trail map is multiplied (element-wise) by some number 0 < n < 1 to simulate the trail slowly dissipating over time.
@@ -21,7 +21,11 @@ The simulation itself proceeds like this:
 
 All the details mentioned above can be found in the original [paper](https://uwe-repository.worktribe.com/output/980579).
 
-## Instructions
+## Notes
+- [This](https://web.archive.org/web/20211125233250/https://www.agner.org/optimize/) is a great resource for data-driven optimization of assembly, especially the per instruction latency, throughput (etc...) measurements.
+- I did my best to respect the intended purpose of the x86 registers (more on this [here](https://web.archive.org/web/20211127172355/https://www.swansontec.com/sregisters.html)).
+
+## How To Build and Run
 The assembler used is [FASM](http://flatassembler.net/) and the makefile can be
 run on both Windows (under MinGW32) and Linux.
 1. Run `make` on Linux or `mingw32-make` on Windows.
