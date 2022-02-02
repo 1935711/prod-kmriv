@@ -8,22 +8,18 @@ format	binary
 org	0x7C00
 use16
 
+macro vid_mode_g
+{
+; @brief Set video mode to graphical (13h)
+; @note Mode 13h is graphical 256-color 320x200 (video memory at 0xA000:0000)
+	xor	ah, ah
+	mov	al, 0x13
+	int	0x10
+}
+
 start:
+	vid_mode_g
 	jmp	main			; Jump over data
-
-; @note For keeping track/controlling the demo effects
-frame		dw 0x0000		; How many frames have been simulated
-effect		db 0x00			; To indicate what effects are active now
-effect_drunk	= 0x01
-effect_rose	= 0x02			; Requires "drunk" effect
-effect_galaxy	= 0x04
-
-; @note The seed will hold the latest generated random number
-seed		dw 0xAB1C		; Seed which determines the initial condition of all agents
-; 0x1935
-; 0xABC1
-; 0x5711
-; 0x1ABC
 
 ; @note No need for a large stack hence the small region
 stack_mem	= 0x0050		; Size: 30KB (conventional memory)
@@ -49,6 +45,27 @@ agnt_off_r	= 4			; Offset where rotation is in agent
 moore_nbhd 	dw -1, -1, -1, 0, 1, 1, 1, 0, -1, -1
 moore_nbhd_x	= moore_nbhd + (2 * 2)	; Each element is a WORD so to skip 2 elements, skip 4 bytes
 moore_nbhd_y	= moore_nbhd
+
+; @note For keeping track/controlling the demo effects
+frame		dw 0x0000		; How many frames have been simulated
+effect		db 0x00			; To indicate what effects are active now
+effect_drunk	= 0x01
+effect_rose	= 0x02			; Requires "drunk" effect
+effect_galaxy	= 0x04
+
+; @xxx The BIOS sets 0x1C-0x1F to 0x00, this makes sure nothing important is in that range
+; (together with the 0 initialized variables above).
+times		1 db 0
+
+; @note The seed will hold the latest generated random number
+seed		dw 0xAB1C		; Seed which determines the initial condition of all agents
+; 0x1935
+; 0xABC1
+; 0x5711
+; 0x1ABC
+
+; @xxx The BIOS sets 0x24 to 0x00, this makes sure nothing important is in that byte.
+times		4 db 0
 
 macro agent_init
 {
@@ -315,15 +332,6 @@ macro rot_to_idx
 	and	bl, 0x0F		; BX = Byte offset in neighborhood list (mod 16)
 }
 
-macro vid_mode_g
-{
-; @brief Set video mode to graphical (13h)
-; @note Mode 13h is graphical 256-color 320x200 (video memory at 0xA000:0000)
-	xor	ah, ah
-	mov	al, 0x13
-	int	0x10
-}
-
 macro vid_mode_g_palette
 {
 ; @brief Setup the VGA color palette
@@ -351,12 +359,6 @@ macro vid_mode_g_palette
 
 	; dec	bx
 	loop	.palette_next
-}
-
-macro shutdown
-{
-; @brief TV shutdown animation
-
 }
 
 xy_to_idx:
@@ -388,7 +390,6 @@ rand:
 	ret
 
 main:
-	vid_mode_g
 	vid_mode_g_palette
 
 	; The only location where segment regs are modified
@@ -414,7 +415,7 @@ main:
 	memcpy_vid1to0
 
 	mov	bx, WORD [frame]
-	cmp	bh, 0x0C		; Checks BX == 0x0FFF
+	cmp	bh, 0x0C		; Checks BX == 0x0CFF
 	je	.main_end
 	cmp	bh, 0x01		; Checks BX == 0x01FF
 	jne	.effect_drunk_enable_skip
@@ -441,7 +442,5 @@ main:
 	.main_end:
 	hlt
 
-		db 0x00
-aut		dd 0x01935711
 times		510-($-$$) db 0		; Add 0s for padding until last 2 bytes
 magic_number	dw 0xAA55
